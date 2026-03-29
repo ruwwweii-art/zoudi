@@ -5,9 +5,9 @@ import { HeroCarousel } from "@/components/ui/HeroCarousel";
 import { MOCK_ROUTES, toRouteCard } from "@/lib/demo-data";
 
 const SCENES = [
-  { key: "date",     label: "约会",      emoji: "💕", desc: "情侣 · 纪念日"    },
-  { key: "kids",     label: "遛娃",      emoji: "👶", desc: "0-8岁 · 推车友好" },
-  { key: "citywalk", label: "Citywalk", emoji: "🚶", desc: "市井 · 随便逛逛"  },
+  { key: "date",     label: "约会",      emoji: "💕", desc: "情侣 · 纪念日",    glow: "rgba(255,80,120,0.22)" },
+  { key: "kids",     label: "遛娃",      emoji: "👶", desc: "0-8岁 · 推车友好", glow: "rgba(40,200,90,0.20)"  },
+  { key: "citywalk", label: "Citywalk", emoji: "🚶", desc: "市井 · 随便逛逛",  glow: "rgba(255,155,40,0.22)" },
 ];
 
 const weekly  = MOCK_ROUTES.filter((r) => r.is_featured).slice(0, 3).map(toRouteCard);
@@ -39,14 +39,14 @@ export default function HomePage() {
         <div className="flex gap-3 overflow-x-auto px-4 pb-2 scrollbar-none">
           {SCENES.map((s) => (
             <Link key={s.key} href={`/routes?scene=${s.key}`} className="flex-none p-4" style={{
-              minWidth: 125, borderRadius: 22,
-              background: "#fff",
-              border: "1px solid var(--border)",
-              boxShadow: "0 2px 12px rgba(0,0,0,0.05)"
+              minWidth: 125, borderRadius: 22, position: "relative", overflow: "hidden",
+              background: "#fff", border: "1px solid var(--border)",
+              boxShadow: "0 2px 12px rgba(0,0,0,0.05)", textDecoration: "none"
             }}>
-              <span style={{ fontSize: 26 }}>{s.emoji}</span>
-              <p className="mt-3" style={{ fontFamily: "var(--font-display)", fontSize: 15, fontWeight: 660, color: "var(--text-primary)", letterSpacing: "-0.01em" }}>{s.label}</p>
-              <p style={{ fontSize: 11, marginTop: 3, color: "var(--text-muted)", fontWeight: 400, letterSpacing: "0.01em" }}>{s.desc}</p>
+              <div style={{ position: "absolute", width: 90, height: 90, borderRadius: "50%", background: `radial-gradient(circle, ${s.glow} 0%, transparent 70%)`, filter: "blur(18px)", top: -14, right: -14, pointerEvents: "none" }} />
+              <span style={{ position: "relative", fontSize: 26 }}>{s.emoji}</span>
+              <p className="mt-3" style={{ position: "relative", fontFamily: "var(--font-display)", fontSize: 15, fontWeight: 660, color: "var(--text-primary)", letterSpacing: "-0.01em" }}>{s.label}</p>
+              <p style={{ position: "relative", fontSize: 11, marginTop: 3, color: "var(--text-muted)", fontWeight: 400, letterSpacing: "0.01em" }}>{s.desc}</p>
             </Link>
           ))}
         </div>

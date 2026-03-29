@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import Image from 'next/image'
 import Link from 'next/link'
 
 type Card =
@@ -28,7 +27,7 @@ const CARDS: Card[] = [
   },
 ]
 
-function pos(i: number, active: number, total: number): 'center' | 'left' | 'right' | 'hidden' {
+function getPos(i: number, active: number, total: number): 'center' | 'left' | 'right' | 'hidden' {
   const offset = ((i - active) % total + total) % total
   if (offset === 0) return 'center'
   if (offset === 1) return 'right'
@@ -39,22 +38,22 @@ function pos(i: number, active: number, total: number): 'center' | 'left' | 'rig
 const STYLE: Record<string, React.CSSProperties> = {
   center: {
     transform: 'translateX(0) rotate(0deg) scale(1)',
-    zIndex: 10, opacity: 1, filter: 'none',
+    zIndex: 10, opacity: 1,
     boxShadow: '0 24px 64px rgba(0,0,0,0.13), 0 4px 16px rgba(0,0,0,0.06)',
   },
   left: {
-    transform: 'translateX(-82%) rotate(-12deg) scale(0.76)',
-    zIndex: 5, opacity: 0.82, filter: 'brightness(0.5)',
-    boxShadow: '0 10px 28px rgba(0,0,0,0.18)',
+    transform: 'translateX(-38%) rotate(-10deg) scale(0.86)',
+    zIndex: 5, opacity: 0.88,
+    boxShadow: '0 12px 36px rgba(0,0,0,0.16)',
   },
   right: {
-    transform: 'translateX(82%) rotate(12deg) scale(0.76)',
-    zIndex: 5, opacity: 0.82, filter: 'brightness(0.5)',
-    boxShadow: '0 10px 28px rgba(0,0,0,0.18)',
+    transform: 'translateX(38%) rotate(10deg) scale(0.86)',
+    zIndex: 5, opacity: 0.88,
+    boxShadow: '0 12px 36px rgba(0,0,0,0.16)',
   },
   hidden: {
     transform: 'translateX(0) rotate(0deg) scale(0.6)',
-    zIndex: 0, opacity: 0, filter: 'none',
+    zIndex: 0, opacity: 0,
     boxShadow: 'none', pointerEvents: 'none',
   },
 }
@@ -78,8 +77,9 @@ export function HeroCarousel() {
       }}
     >
       {CARDS.map((card, i) => {
-        const p = pos(i, active, total)
+        const p = getPos(i, active, total)
         const isCenter = p === 'center'
+        const isSide = p === 'left' || p === 'right'
 
         return (
           <div
@@ -90,7 +90,7 @@ export function HeroCarousel() {
               left: '50%', marginLeft: -132,
               top: 6, width: 264, height: 340,
               borderRadius: 30, overflow: 'hidden',
-              transition: 'transform 0.52s cubic-bezier(0.34,1.28,0.64,1), opacity 0.38s ease, filter 0.38s ease, box-shadow 0.4s ease',
+              transition: 'transform 0.52s cubic-bezier(0.34,1.28,0.64,1), opacity 0.38s ease, box-shadow 0.4s ease',
               cursor: isCenter ? 'default' : 'pointer',
               WebkitTapHighlightColor: 'transparent',
               ...STYLE[p],
@@ -105,15 +105,14 @@ export function HeroCarousel() {
                 padding: '36px 26px', textAlign: 'center',
                 position: 'relative', overflow: 'hidden',
               }}>
-                {/* 侧位时加深色遮罩，让白卡和路线卡视觉一致 */}
-                {!isCenter && (
-                  <div style={{ position: 'absolute', inset: 0, background: 'rgba(20,20,30,0.45)', zIndex: 20, pointerEvents: 'none', borderRadius: 30 }} />
+                {/* 侧位时遮罩 */}
+                {isSide && (
+                  <div style={{ position: 'absolute', inset: 0, background: 'rgba(15,15,25,0.5)', zIndex: 20, pointerEvents: 'none' }} />
                 )}
                 {/* Aurora */}
                 <div style={{ position: 'absolute', width: 240, height: 240, borderRadius: '50%', background: 'radial-gradient(circle, rgba(90,160,255,0.26) 0%, transparent 68%)', filter: 'blur(40px)', left: '50%', bottom: -60, transform: 'translateX(-50%)', pointerEvents: 'none' }} />
                 <div style={{ position: 'absolute', width: 150, height: 150, borderRadius: '50%', background: 'radial-gradient(circle, rgba(80,210,150,0.16) 0%, transparent 70%)', filter: 'blur(30px)', left: -10, bottom: 30, pointerEvents: 'none' }} />
                 <div style={{ position: 'absolute', width: 120, height: 120, borderRadius: '50%', background: 'radial-gradient(circle, rgba(180,120,255,0.14) 0%, transparent 70%)', filter: 'blur(24px)', right: 0, top: 40, pointerEvents: 'none' }} />
-
                 <div style={{ position: 'relative', zIndex: 1 }}>
                   <p style={{ fontSize: 11.5, color: '#7baeff', fontWeight: 580, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 16 }}>
                     HANGZHOU · 杭州
@@ -139,18 +138,24 @@ export function HeroCarousel() {
                 </div>
               </div>
             ) : (
-              /* ── 路线照片卡 ── */
-              <div style={{ width: '100%', height: '100%', position: 'relative' }}>
-                <Image
-                  src={card.image} alt={card.title}
-                  fill className="object-cover" sizes="264px"
-                  priority={i <= 1}
-                />
-                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.18) 50%, transparent 100%)' }} />
-                <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '0 22px 28px' }}>
+              /* ── 路线照片卡：用 background-image 确保图片必定显示 ── */
+              <div style={{
+                width: '100%', height: '100%',
+                backgroundImage: `url(${card.image})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                position: 'relative',
+              }}>
+                {/* 侧位时额外压暗 */}
+                {isSide && (
+                  <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.28)', zIndex: 1, pointerEvents: 'none' }} />
+                )}
+                {/* 渐变遮罩 */}
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.15) 52%, transparent 100%)', zIndex: 2 }} />
+                <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '0 22px 28px', zIndex: 3 }}>
                   <span style={{
                     display: 'inline-block', marginBottom: 10,
-                    background: 'rgba(255,255,255,0.2)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
+                    background: 'rgba(255,255,255,0.22)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
                     color: '#fff', fontSize: 11, padding: '3px 10px', borderRadius: 99, fontWeight: 450,
                   }}>{card.tag}</span>
                   <p style={{ color: '#fff', fontSize: 19, fontWeight: 720, fontFamily: 'var(--font-display)', letterSpacing: '-0.02em', lineHeight: 1.25 }}>

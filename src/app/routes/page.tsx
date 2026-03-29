@@ -38,19 +38,24 @@ export default async function RoutesPage({ searchParams }: Props) {
 
   return (
     <div className="mobile-container pb-nav">
-      {/* 顶部栏 */}
+
+      {/* ─── 顶部栏 ─── */}
       <header className="page-px pt-14 pb-2 flex items-center justify-between">
-        <h1 style={{ fontFamily: "var(--font-display)", fontSize: 20, fontWeight: 720, letterSpacing: "-0.02em", color: "var(--text-primary)" }}>{pageTitle}</h1>
-        <span style={{ fontSize: 12, color: "var(--text-muted)", fontWeight: 450 }}>{cards.length} 条</span>
+        <h1 style={{ fontFamily: "var(--font-display)", fontSize: 20, fontWeight: 720, letterSpacing: "-0.02em", color: "var(--text-primary)" }}>
+          {pageTitle}
+        </h1>
+        <span className="pill pill-muted" style={{ fontSize: 11.5, fontWeight: 500 }}>
+          {cards.length} 条
+        </span>
       </header>
 
-      {/* 场景 Tab */}
+      {/* ─── 场景 Tab ─── */}
       <div className="page-px mt-3">
-        <div className="flex gap-2">
+        <div className="flex gap-2 overflow-x-auto scrollbar-none pb-1">
           {[
-            { key: "", label: "全部" },
-            { key: "date", label: "💕 约会" },
-            { key: "kids", label: "👶 遛娃" },
+            { key: "",         label: "全部" },
+            { key: "date",     label: "💕 约会" },
+            { key: "kids",     label: "👶 遛娃" },
             { key: "citywalk", label: "🚶 Citywalk" },
           ].map((tab) => {
             const active = (scene ?? "") === tab.key;
@@ -58,13 +63,15 @@ export default async function RoutesPage({ searchParams }: Props) {
               <Link
                 key={tab.key}
                 href={tab.key ? `/routes?scene=${tab.key}` : "/routes"}
-                className="pill"
+                className="pill flex-none"
                 style={{
-                  background: active ? "var(--text-primary)" : "#f0ece6",
-                  color: active ? "var(--card)" : "var(--text-secondary)",
-                  fontWeight: active ? 600 : 500,
-                  padding: "7px 14px",
-                  fontSize: 13,
+                  background: active ? "var(--text-primary)" : "#fff",
+                  color: active ? "#fff" : "var(--text-secondary)",
+                  border: `1px solid ${active ? "transparent" : "var(--border)"}`,
+                  fontWeight: active ? 600 : 470,
+                  padding: "7px 14px", fontSize: 13,
+                  boxShadow: active ? "none" : "0 1px 4px rgba(0,0,0,0.04)",
+                  textDecoration: "none",
                 }}
               >
                 {tab.label}
@@ -74,10 +81,10 @@ export default async function RoutesPage({ searchParams }: Props) {
         </div>
       </div>
 
-      {/* 筛选栏 */}
+      {/* ─── 筛选栏 ─── */}
       <FilterBar current={{ scene, duration, budget, weather, sortBy }} />
 
-      {/* 推荐区（无筛选时显示） */}
+      {/* ─── 本周精选（无筛选时显示） ─── */}
       {!scene && !duration && !budget && !weather && (
         <section className="mt-6">
           <div className="page-px flex items-center justify-between mb-4">
@@ -93,13 +100,20 @@ export default async function RoutesPage({ searchParams }: Props) {
         </section>
       )}
 
-      {/* 列表 */}
+      {/* ─── 路线列表 ─── */}
       <section className="page-px mt-6 flex flex-col gap-4">
         {cards.length === 0 ? (
-          <div className="flex flex-col items-center py-16 gap-3">
-            <span style={{ fontSize: 40 }}>🗺️</span>
-            <p style={{ fontSize: 14, color: "var(--text-muted)" }}>换个筛选条件试试</p>
-            <Link href="/routes" className="btn-secondary" style={{ fontSize: 13 }}>清除筛选</Link>
+          <div className="flex flex-col items-center py-16 gap-4">
+            <span style={{ fontSize: 44 }}>🗺️</span>
+            <p style={{ fontSize: 14, color: "var(--text-muted)", fontWeight: 400 }}>换个筛选条件试试</p>
+            <Link href="/routes" style={{
+              background: "#fff", border: "1px solid var(--border)",
+              color: "var(--text-secondary)", borderRadius: "var(--radius-full)",
+              padding: "9px 20px", fontSize: 13, fontWeight: 480, textDecoration: "none",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+            }}>
+              清除筛选
+            </Link>
           </div>
         ) : (
           cards.map((r) => <RouteCard key={r.id} route={r} />)
