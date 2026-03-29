@@ -43,14 +43,14 @@ const STYLE: Record<string, React.CSSProperties> = {
     boxShadow: '0 24px 64px rgba(0,0,0,0.13), 0 4px 16px rgba(0,0,0,0.06)',
   },
   left: {
-    transform: 'translateX(-38%) rotate(-10deg) scale(0.86)',
-    zIndex: 5, opacity: 0.88, filter: 'brightness(0.72)',
-    boxShadow: '0 12px 36px rgba(0,0,0,0.16)',
+    transform: 'translateX(-82%) rotate(-12deg) scale(0.76)',
+    zIndex: 5, opacity: 0.82, filter: 'brightness(0.5)',
+    boxShadow: '0 10px 28px rgba(0,0,0,0.18)',
   },
   right: {
-    transform: 'translateX(38%) rotate(10deg) scale(0.86)',
-    zIndex: 5, opacity: 0.88, filter: 'brightness(0.72)',
-    boxShadow: '0 12px 36px rgba(0,0,0,0.16)',
+    transform: 'translateX(82%) rotate(12deg) scale(0.76)',
+    zIndex: 5, opacity: 0.82, filter: 'brightness(0.5)',
+    boxShadow: '0 10px 28px rgba(0,0,0,0.18)',
   },
   hidden: {
     transform: 'translateX(0) rotate(0deg) scale(0.6)',
@@ -105,6 +105,10 @@ export function HeroCarousel() {
                 padding: '36px 26px', textAlign: 'center',
                 position: 'relative', overflow: 'hidden',
               }}>
+                {/* 侧位时加深色遮罩，让白卡和路线卡视觉一致 */}
+                {!isCenter && (
+                  <div style={{ position: 'absolute', inset: 0, background: 'rgba(20,20,30,0.45)', zIndex: 20, pointerEvents: 'none', borderRadius: 30 }} />
+                )}
                 {/* Aurora */}
                 <div style={{ position: 'absolute', width: 240, height: 240, borderRadius: '50%', background: 'radial-gradient(circle, rgba(90,160,255,0.26) 0%, transparent 68%)', filter: 'blur(40px)', left: '50%', bottom: -60, transform: 'translateX(-50%)', pointerEvents: 'none' }} />
                 <div style={{ position: 'absolute', width: 150, height: 150, borderRadius: '50%', background: 'radial-gradient(circle, rgba(80,210,150,0.16) 0%, transparent 70%)', filter: 'blur(30px)', left: -10, bottom: 30, pointerEvents: 'none' }} />
