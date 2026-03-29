@@ -1,36 +1,53 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 走地
 
-## Getting Started
+基于 Next.js 16 的本地路线内容后台项目，当前默认配置为：
 
-First, run the development server:
+- AI: 阿里云百炼 DashScope OpenAI 兼容接口
+- 模型: `qwen3-max-2026-01-23`
+- 页面: 默认使用假数据演示模式
+- 数据库: 需要真实数据时再接 MySQL
+
+## 本地启动
+
+1. 安装依赖
+
+```bash
+npm install
+```
+
+2. 准备 `.env`
+
+项目已自带 `.env.example` 模板。只想跑演示页面时，最少先填写这些值：
+
+```env
+DEMO_MODE="true"
+DATABASE_URL=""
+DASHSCOPE_API_KEY="your-dashscope-api-key"
+DASHSCOPE_BASE_URL="https://coding.dashscope.aliyuncs.com/v1"
+AI_MODEL="qwen3-max-2026-01-23"
+JWT_SECRET="your-jwt-secret-at-least-32-chars-long"
+AUTH_SECRET="your-auth-secret-generated-by-openssl"
+```
+
+3. 启动开发服务器
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+打开 [http://localhost:3000](http://localhost:3000) 查看页面。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 如果之后要切回真实数据库
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+把 `.env` 改成下面这样：
 
-## Learn More
+```env
+DEMO_MODE="false"
+DATABASE_URL="mysql://root:your_mysql_password@127.0.0.1:3306/zoudi"
+```
 
-To learn more about Next.js, take a look at the following resources:
+然后执行：
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npx prisma migrate dev --name init
+```

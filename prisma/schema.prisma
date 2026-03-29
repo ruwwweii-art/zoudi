@@ -1,0 +1,314 @@
+// 「走地」数据库 Schema
+// 当前默认使用 MySQL
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+// ─────────────────────────────────────────────
+// 用户系统
+// ─────────────────────────────────────────────
+
+model User {
+  id         String   @id @default(uuid())
+  email      String?  @unique
+  password   String?  // bcrypt hash，邮箱登录使用
+  nickname   String?
+  avatar_url String?
+  city       String?  @default("杭州")
+  is_admin   Boolean  @default(false)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  preferences        UserPreferences?
+  favorites          Favorite[]
+  reviews            Review[]
+  subscriptions      Subscription[]
+  ai_drafts_reviewed AiRouteDraft[] @relation("ReviewedBy")
+  view_history       ViewHistory[]
+
+  @@map("users")
+}
+
+model UserPreferences {
+  id              String  @id @default(uuid())
+  user_id         String  @unique
+  primary_scene   String? // date | kids
+  budget_level    String? // low | medium | high
+  kid_age_min     Int?
+  kid_age_max     Int?
+  prefer_duration String? // short | half | full
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("user_preferences")
+}
+
+// ─────────────────────────────────────────────
+// 路线核心
+// ─────────────────────────────────────────────
+
+model Route {
+  id                   String    @id @default(uuid())
+  title                String
+  subtitle             String?
+  scene                String    // date | kids | citywalk
+  city                 String    @default("杭州")
+  duration_type        String    // short(2h内) | half(半日) | full(全日)
+  duration_minutes     Int
+  budget_min           Int?
+  budget_max           Int?
+  budget_per_person    Int?
+  // 遛娃专属字段
+  kid_age_min          Int?
+  kid_age_max          Int?
+  stroller_friendly    Boolean   @default(false)
+  has_restroom         Boolean   @default(false)
+  has_nursing_room     Boolean   @default(false)
+  has_parking          Boolean   @default(false)
+  has_dining           Boolean   @default(false)
+  // 天气 & 季节
+  weather_type         String    @default("both") // sunny | rainy | both
+  best_season          String?
+  // 内容字段
+  cover_image_url      String?
+  description          String?
+  highlights           Json?     // string[]
+  tips                 Json?     // string[]
+  rainy_alternative    String?
+  suggested_start_time String?   // "10:00"
+  fit_for              Json?     // string[]
+  not_fit_for          Json?     // string[]
+  risk_notes           Json?     // string[]
+  // 统计
+  stop_count           Int       @default(0)
+  avg_rating           Float     @default(0)
+  favorite_count       Int       @default(0)
+  view_count           Int       @default(0)
+  // 状态
+  status               String    @default("draft") // draft | published | archived
+  is_featured          Boolean   @default(false)
+  published_at         DateTime?
+  created_at           DateTime  @default(now())
+  updated_at           DateTime  @updatedAt
+
+  steps        RouteStep[]
+  tags         RouteTag[]
+  images       RouteImage[]
+  favorites    Favorite[]
+  reviews      Review[]
+  view_history ViewHistory[]
+
+  @@map("routes")
+}
+
+// ─────────────────────────────────────────────
+// POI 点位
+// ─────────────────────────────────────────────
+
+model Poi {
+  id              String   @id @default(uuid())
+  name            String
+  address         String?
+  latitude        Float?
+  longitude       Float?
+  category        String?  // cafe | restaurant | park | museum | attraction
+  opening_hours   Json?    // { mon: "9:00-18:00", ... } or string
+  avg_cost        Int?     // 人均消费（元）
+  cover_image_url String?
+  has_parking     Boolean  @default(false)
+  has_restroom    Boolean  @default(false)
+  is_accessible   Boolean  @default(false) // 无障碍/推车友好
+  phone           String?
+  website         String?
+  amap_id         String?  // 高德地图 POI ID，用于一键导航
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  route_steps RouteStep[]
+
+  @@map("pois")
+}
+
+// ─────────────────────────────────────────────
+// 路线站点（路线 → POI 关联，含顺序和活动建议）
+// ─────────────────────────────────────────────
+
+model RouteStep {
+  id                String   @id @default(uuid())
+  route_id          String
+  poi_id            String?
+  poi_name          String?  // 若 POI 未入库，直接存名称
+  sequence_order    Int      // 1, 2, 3...
+  stay_duration     Int?     // 停留分钟数
+  activity_tips     String?  // 在这站做什么
+  photo_spots       String?  // 拍照建议
+  transport_to_next String?  // walk | bus | drive | subway
+  distance_to_next  Int?     // 到下一站距离（米）
+  time_to_next      Int?     // 到下一站耗时（分钟）
+  transport_tips    String?  // 交通补充说明
+  created_at        DateTime @default(now())
+
+  route Route @relation(fields: [route_id], references: [id], onDelete: Cascade)
+  poi   Poi?  @relation(fields: [poi_id], references: [id], onDelete: SetNull)
+
+  @@map("route_steps")
+}
+
+// ─────────────────────────────────────────────
+// 标签系统
+// ─────────────────────────────────────────────
+
+model Tag {
+  id         String @id @default(uuid())
+  name       String @unique
+  category   String? // atmosphere | activity | feature | scene | duration
+  icon       String? // emoji 图标
+  sort_order Int    @default(0)
+
+  route_tags RouteTag[]
+
+  @@map("tags")
+}
+
+model RouteTag {
+  route_id String
+  tag_id   String
+
+  route Route @relation(fields: [route_id], references: [id], onDelete: Cascade)
+  tag   Tag   @relation(fields: [tag_id], references: [id], onDelete: Cascade)
+
+  @@id([route_id, tag_id])
+  @@map("route_tags")
+}
+
+// ─────────────────────────────────────────────
+// 路线图片
+// ─────────────────────────────────────────────
+
+model RouteImage {
+  id         String   @id @default(uuid())
+  route_id   String
+  image_url  String
+  caption    String?
+  sort_order Int      @default(0)
+  is_cover   Boolean  @default(false)
+  created_at DateTime @default(now())
+
+  route Route @relation(fields: [route_id], references: [id], onDelete: Cascade)
+
+  @@map("route_images")
+}
+
+// ─────────────────────────────────────────────
+// 收藏
+// ─────────────────────────────────────────────
+
+model Favorite {
+  id         String   @id @default(uuid())
+  user_id    String
+  route_id   String
+  created_at DateTime @default(now())
+
+  user  User  @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  route Route @relation(fields: [route_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, route_id])
+  @@map("favorites")
+}
+
+// ─────────────────────────────────────────────
+// 评价（P1）
+// ─────────────────────────────────────────────
+
+model Review {
+  id         String   @id @default(uuid())
+  user_id    String
+  route_id   String
+  rating     Int      // 1-5
+  content    String?
+  photo_urls Json?    // string[]
+  created_at DateTime @default(now())
+
+  user  User  @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  route Route @relation(fields: [route_id], references: [id], onDelete: Cascade)
+
+  @@map("reviews")
+}
+
+// ─────────────────────────────────────────────
+// 会员订阅（P1）
+// ─────────────────────────────────────────────
+
+model Subscription {
+  id         String   @id @default(uuid())
+  user_id    String
+  plan_type  String   // monthly | yearly
+  status     String   // active | expired | cancelled
+  price_paid Int      // 分（人民币）
+  started_at DateTime
+  expires_at DateTime
+  created_at DateTime @default(now())
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("subscriptions")
+}
+
+// ─────────────────────────────────────────────
+// AI 路线草稿（后台生成 → 人工审核 → 发布）
+// ─────────────────────────────────────────────
+
+model AiRouteDraft {
+  id             String   @id @default(uuid())
+  input_json     Json     // 运营填写的结构化输入（PRD 11.3 schema）
+  output_json    Json?    // AI 生成的路线草稿（PRD 11.4 schema）
+  model_name     String   @default("claude-opus-4-5")
+  prompt_version String   @default("v1")
+  status         String   @default("draft") // draft | reviewed | published | rejected
+  review_notes   String?  // 审核备注
+  reviewed_by    String?
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  reviewer User? @relation("ReviewedBy", fields: [reviewed_by], references: [id], onDelete: SetNull)
+
+  @@map("ai_route_drafts")
+}
+
+// ─────────────────────────────────────────────
+// 搜索热词（运营配置）
+// ─────────────────────────────────────────────
+
+model SearchHotword {
+  id         String   @id @default(uuid())
+  word       String   @unique
+  sort_order Int      @default(0)
+  is_active  Boolean  @default(true)
+  created_at DateTime @default(now())
+
+  @@map("search_hotwords")
+}
+
+// ─────────────────────────────────────────────
+// 用户浏览历史
+// ─────────────────────────────────────────────
+
+model ViewHistory {
+  id        String   @id @default(uuid())
+  user_id   String
+  route_id  String
+  viewed_at DateTime @default(now())
+
+  user  User  @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  route Route @relation(fields: [route_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, route_id])
+  @@index([user_id, viewed_at(sort: Desc)])
+  @@map("view_history")
+}
