@@ -7,9 +7,9 @@
 
 :root {
   /* 页面底色 */
-  --bg:               #f5f2ec;
-  --card:             #fffdf8;
-  --border:           #e8e2d9;
+  --bg:               #eef0f5;
+  --card:             #ffffff;
+  --border:           #e2e6ed;
 
   /* 文字 */
   --text-primary:     #1a1714;
@@ -116,7 +116,7 @@ body {
 }
 
 .pill-muted {
-  background: #f0ece6;
+  background: #e5e8ef;
   color: var(--text-secondary);
 }
 
@@ -155,7 +155,7 @@ body {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  background: #f0ece6;
+  background: #e5e8ef;
   color: var(--text-primary);
   border-radius: var(--radius-md);
   padding: 13px 20px;
